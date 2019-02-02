@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import sys
+
+def print_help():
+  first_arg = sys.argv[1]
+  if first_arg == '-h' or first_arg == '--help':
+    print("""
+Help: %s
+
+Arguments: <path/to/dir>
+
+Options:
+  -h, --help: Prints this message
+""" % (os.path.basename(sys.argv[0])))
+    exit(0)
+
+print_help()
+
+def format_entry(root, entry):
+  config = entry.split(':')
+  if len(config) != 2: raise ValueError(f"Bad configuration: expecting '<base path>:<spec> but got {entry}")
+
+  [path, selection] = config
+  expanded = os.path.expanduser(path)
+  if not os.path.isabs(expanded):
+    expanded = os.path.normpath(os.path.join(os.getcwd(), root, expanded))
+  
+  return (expanded, selection) 
+
+def check_entries(entries):
+  for (e, f) in entries:
+    if not os.path.isdir(e):
+      raise RuntimeError(f"Base folder {e} is not a directory")
+
+    source_dir = os.path.join(e, f)
+    if not os.path.isdir(source_dir):
+      raise RuntimeError(f"Lego entry {e} is not a directory")
+
+def build_entries(virtual_dir, entries):
+  for (parent_dir, selection) in entries:
+    if '*' in selection:
+      raise RuntimeError(f"No support for pattern yet")
+    elif selection[0] == '!':
+      raise RuntimeError(f"No support for pattern yet")
+    else:
+      create_entry(virtual_dir, parent_dir, selection)
+
+def create_entry(virtual_dir, parent_dir, folder):
+  target_dir = os.path.join(virtual_dir, folder)
+  if os.path.exists(target_dir):
+    print(f"{target_dir} already present. Skipping ...")
+  else:
+    (head, tail) = os.path.split(folder)
+    if len(head) == 0:
+      # This is a 1-depth selection
+      source_dir = os.path.join(parent_dir, folder)
+      os.symlink(source_dir, target_dir)
+    else:
+      print(f"Multi-depth path {folder}. Cannot process it yet ...")
+
+virtual_dir_path = sys.argv[1]
+
+with open(os.path.join(virtual_dir_path, '.lego-spec')) as file:
+  config = json.load(file)
+
+entries = [format_entry(virtual_dir_path, e.strip()) for e in config['structure']]
+print(entries)
+
+check_entries(entries)
+build_entries(virtual_dir_path, entries)

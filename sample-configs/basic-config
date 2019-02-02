@@ -1,0 +1,7 @@
+{
+  "structure": [
+    "..:web/ultiplay",
+    "~/projects:completion-rust",
+    "/Users/oliv/projects:small-world"
+  ]
+}
