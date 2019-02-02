@@ -48,18 +48,28 @@ def build_entries(virtual_dir, entries):
     else:
       create_entry(virtual_dir, parent_dir, selection)
 
+def create_hierarchy(root_dir, folder):
+  current_path = root_dir
+  remaining = folder
+  while True:
+    (head, remaining) = os.path.split(remaining)
+    if len(head) == 0: break
+    
+    current_path = os.path.join(current_path, head)
+    if not os.path.exists(current_path):
+      os.mkdir(current_path)
+
 def create_entry(virtual_dir, parent_dir, folder):
   target_dir = os.path.join(virtual_dir, folder)
   if os.path.exists(target_dir):
     print(f"{target_dir} already present. Skipping ...")
   else:
-    (head, tail) = os.path.split(folder)
-    if len(head) == 0:
-      # This is a 1-depth selection
-      source_dir = os.path.join(parent_dir, folder)
-      os.symlink(source_dir, target_dir)
-    else:
-      print(f"Multi-depth path {folder}. Cannot process it yet ...")
+    base_dir = os.path.dirname(folder)
+    if len(base_dir) > 0:
+      create_hierarchy(virtual_dir, folder)
+    
+    source_dir = os.path.join(parent_dir, folder)
+    os.symlink(source_dir, target_dir)
 
 virtual_dir_path = sys.argv[1]
 
