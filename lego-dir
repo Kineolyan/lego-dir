@@ -19,6 +19,9 @@ Options:
 
 print_help()
 
+def is_not_selection(selection):
+  return selection[0] == '!'
+
 def format_entry(root, entry):
   config = entry.split(':')
   if len(config) != 2: raise ValueError(f"Bad configuration: expecting '<base path>:<spec> but got {entry}")
@@ -35,16 +38,15 @@ def check_entries(entries):
     if not os.path.isdir(e):
       raise RuntimeError(f"Base folder {e} is not a directory")
 
-    source_dir = os.path.join(e, f)
-    if not os.path.isdir(source_dir):
-      raise RuntimeError(f"Lego entry {e} is not a directory")
+    if not is_not_selection(f):
+      source_dir = os.path.join(e, f)
+      if not os.path.isdir(source_dir):
+        raise RuntimeError(f"Lego entry {source_dir} is not a directory")
 
 def build_entries(virtual_dir, entries):
   for (parent_dir, selection) in entries:
-    if '*' in selection:
-      raise RuntimeError(f"No support for pattern yet")
-    elif selection[0] == '!':
-      raise RuntimeError(f"No support for pattern yet")
+    if is_not_selection(selection):
+      create_not_entries(virtual_dir, parent_dir, selection)
     else:
       create_entry(virtual_dir, parent_dir, selection)
 
@@ -70,6 +72,14 @@ def create_entry(virtual_dir, parent_dir, folder):
     
     source_dir = os.path.join(parent_dir, folder)
     os.symlink(source_dir, target_dir)
+
+def create_not_entries(virtual_dir, parent_dir, folder):
+  unwanted = folder[1:]
+  elements = os.listdir(parent_dir)
+  check = lambda e: e != unwanted and e[0] != '.' and os.path.isdir(os.path.join(parent_dir, e))
+  for e in elements:
+    if check(e):
+      create_entry(virtual_dir, parent_dir, e)
 
 virtual_dir_path = sys.argv[1]
 

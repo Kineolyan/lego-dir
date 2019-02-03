@@ -1,0 +1,7 @@
+{
+  "structure": [
+    "/path/to/root:!com",
+    "/path/to/root:com/contrib",
+    "/path/to/root:com/legacy"
+  ]
+}
