@@ -1,7 +1,22 @@
 {
-  "structure": [
+  "version": 2,
+  "structure": [    
     "/path/to/root:!com",
-    "/path/to/root:com/contrib",
-    "/path/to/root:com/legacy"
-  ]
+    {
+      "location": "/an/other/path",
+      "base": "org",
+      "selection": [
+        "!apache",
+        "aws"
+      ],
+    },
+    {
+      "location": "/path/to/root",
+      "base": "com",
+      "selection": [
+        "!contrib",
+        "!perso"
+      ]
+    }
+  }
 }
