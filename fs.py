@@ -56,18 +56,25 @@ class TestApi:
     return self.entries[path]
 
   def _set_entries(self, path, entries):
+    """
+    Adds entries for the given path.
+    The entries are returned when calling Api#listdir(<path>).
+    """
     self.entries[path] = entries
 
   def exists(self, path):
     return path in self.files
 
   def _set_file(self, path):
+    """
+    Adds a new entry to the list of files and directories existing in this file system.
+    """
     self.files.add(path)
 
   def mkdir(self, path):
-    self.created_dirs.add(path)
+    self.created_dirs.append(path)
 
   def symlink(self, src, dst):
-    self.created_links.add((src, dst))
+    self.created_links.append((src, dst))
 
 SYSTEM = SystemApi()
