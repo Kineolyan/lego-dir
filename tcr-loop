@@ -5,8 +5,7 @@ function run_tests() {
 }
 
 function commit() {
-	git add .
-	git commit -m "working"
+	git commit -am "working"
 	echo -e "\e[32mYou rock\e[0m"
 }
 
