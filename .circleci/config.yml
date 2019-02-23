@@ -11,4 +11,4 @@ jobs:
 
       - run:
           name: run tests
-          command: python *_test.py
+          command: python -m unittest *_test.py
