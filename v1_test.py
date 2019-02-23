@@ -67,13 +67,13 @@ class V1BuildEntryTest(unittest.TestCase):
     structure = [('/root', 'var/log/syslog')]
     v1.build_entries('the/vdir', structure, self.fs)
 
-    self.assertEquals(
+    self.assertEqual(
       self.fs.created_dirs,
       [
         'the/vdir/var',
         'the/vdir/var/log'
       ])
-    self.assertEquals(
+    self.assertEqual(
       list(self.fs.created_links),
       [('/root/var/log/syslog', 'the/vdir/var/log/syslog')])
 
