@@ -13,8 +13,8 @@ def format_entry(root, entry, fs):
   expanded = fs.expanduser(path)
   if not os.path.isabs(expanded):
     expanded = os.path.normpath(os.path.join(fs.getcwd(), root, expanded))
-  
-  return (expanded, selection) 
+
+  return (expanded, selection)
 
 def check_entries(entries, fs):
   for (e, f) in entries:
@@ -38,3 +38,6 @@ def process_structure(virtual_dir_path, structure, fs):
 
   check_entries(entries, fs)
   build_entries(virtual_dir_path, entries, fs)
+
+def process(virtual_dir_path, config, fs):
+  process_structure(virtual_dir_path, config["structure"], fs)

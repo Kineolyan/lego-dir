@@ -1,0 +1,23 @@
+#!/bin/bash
+
+function run_tests() {
+	python -m unittest *_test.py && ./lego-dir --help > /dev/null
+}
+
+function commit() {
+	git add .
+	git commit -m "working"
+	echo -e "\e[32mYou rock\e[0m"
+}
+
+function revert() {
+	git reset --hard HEAD
+	git clean -fd
+	echo -e "\e[31mOops\e[0m You got reverted!!"
+}
+
+while true
+do
+	read -p 'Press enter if you feel lucky...' y
+	run_tests && commit || revert
+done

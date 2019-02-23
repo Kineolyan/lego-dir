@@ -133,6 +133,5 @@ class V1Test(unittest.TestCase):
         ('/root/b', 'vdir/b')
       ]))
 
-
 if __name__ == '__main__':
   unittest.main()
