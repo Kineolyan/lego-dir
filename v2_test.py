@@ -123,6 +123,98 @@ class V1FormatEntryTest(unittest.TestCase):
 				"selection": ['nginx', 'apache']
 			})
 
+	def test_with_negated_root_entry(self):
+		entry = v2.format_entry('../vdir', '~/dd:!f', self.fs)
+		self.assertEqual(
+			entry,
+			{
+				"location": f"{self.fs.home}/dd",
+				"selection": ['!f']
+			})
+
+	def test_with_negated_entry(self):
+		entry = v2.format_entry('../vdir', '~/dd:path/to/!f', self.fs)
+		self.assertEqual(
+			entry,
+			{
+				"location": f"{self.fs.home}/dd",
+				"base": 'path/to',
+				"selection": ['!f']
+			})
+
+class V2CheckEntryTest(unittest.TestCase):
+
+	def setUp(self):
+	  home = '/home/user'
+	  self.fs = TestApi(home = home, cwd = home)
+
+	def test_simple_entry(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_file('/path/to/a/dir/file')
+		config = {
+			'location': '/path/to/a/dir',
+			'selection': ['file']
+		}
+		v2.check_entries([config], self.fs)
+
+	def test_entry_with_base(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_dir('/path/to/a/dir/d1/d2')
+		self.fs._set_file('/path/to/a/dir/d1/d2/file')
+		config = {
+			'location': '/path/to/a/dir',
+			'base': 'd1/d2',
+			'selection': ['file']
+		}
+		v2.check_entries([config], self.fs)
+
+	def test_multiple_entries(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_dir('/path/to/a/dir/d1/d2')
+		self.fs._set_file('/path/to/a/dir/d1/d2/f1')
+		self.fs._set_file('/path/to/a/dir/d1/d2/f2')
+		config = {
+			'location': '/path/to/a/dir',
+			'base': 'd1/d2',
+			'selection': ['f1', 'f2']
+		}
+		v2.check_entries([config], self.fs)
+
+	def test_with_negate_entries(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_dir('/path/to/a/dir/d1/d2')
+		config = {
+			'location': '/path/to/a/dir',
+			'base': 'd1/d2',
+			'selection': ['!f1', '!f2']
+		}
+		v2.check_entries([config], self.fs)
+
+	def test_with_mixed_entries(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_dir('/path/to/a/dir/d1/d2')
+		config = {
+			'location': '/path/to/a/dir',
+			'base': 'd1/d2',
+			'selection': ['!f1', 'f2']
+		}
+		# with self.assertRaises(ValueError):
+		# 	v2.check_entries([config], self.fs)
+
+	def test_with_invalid_location(self):
+		config = {'location': '/not/a/dir'}
+		with self.assertRaises(ValueError):
+			v2.check_entries([config], self.fs)
+
+	def test_with_invalid_base(self):
+		self.fs._set_dir('/the/real/dir')
+		config = {
+			'location': '/the/real/dir',
+			'base': 'is/wrong'
+		}
+		with self.assertRaises(ValueError):
+			v2.check_entries([config], self.fs)
+
 # class V1BuildEntryTest(unittest.TestCase):
 
 	# def setUp(self):
@@ -222,7 +314,7 @@ class V2Test(unittest.TestCase):
 				"selection": ['nginx', 'apache']
 			}
 		]
-		v2.process('vdir', {"structure": structure}, fs)
+		# v2.process('vdir', {"structure": structure}, fs)
 
 		# self.assertEqual(
 		#   set(fs.created_links),
