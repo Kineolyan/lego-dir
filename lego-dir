@@ -3,8 +3,10 @@
 import json
 import os
 import sys
+from config import read_default as read_config
 
 import v1
+import v2
 import fs
 
 def print_help():
@@ -29,14 +31,13 @@ def get_version(config):
     return 1
 
 virtual_dir_path = sys.argv[1]
-
-with open(os.path.join(virtual_dir_path, '.lego-spec')) as file:
-  config = json.load(file)
+config = read_config(virtual_dir_path)
 
 version = get_version(config)
 if version == 1:
-  v1.process_structure(virtual_dir_path, config['structure'], fs.SYSTEM)
+  v1.process(virtual_dir_path, config, fs.SYSTEM)
 elif version == 2:
+  v2.process(virtual_dir_path, config, fs.SYSTEM)
   raise RuntimeError("Work in progress for this version")
 else:
   raise RuntimeError(f"Unsupported version {version}")
