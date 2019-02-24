@@ -1,10 +1,10 @@
 import os
 
 from config import read as read_config
-# import materialize as mat
+import materialize as mat
 
-# def is_not_selection(selection):
-#   return '!' in selection
+def is_not_selection(selection):
+  return '!' in selection
 
 def format_location(path, root, fs):
 	expanded = fs.expanduser(path)
@@ -55,18 +55,33 @@ def check_entries(entries, fs):
 			base_path = os.path.join(location, base)
 			if not fs.isdir(base_path):
 				raise ValueError(f"Base folder {base_path} is not a directory")
+		else:
+			base_path = location
 
-  #   if not is_not_selection(f):
-  #     source_dir = os.path.join(e, f)
-  #     if not fs.isdir(source_dir):
-  #       raise RuntimeError(f"Lego entry {source_dir} is not a directory")
+		## Entries must be all not values or values
+		all_not = all(is_not_selection(e) for e in entry['selection'])
+		all_basic = all(not is_not_selection(e) for e in entry['selection'])
+		if not (all_basic or all_not):
+			raise ValueError(f"Selection must be either values or a list of not entries")
 
-# def build_entries(virtual_dir, entries, fs):
-#   for (parent_dir, selection) in entries:
-#     if is_not_selection(selection):
-#       mat.create_not_entries(virtual_dir, parent_dir, selection, fs)
-#     else:
-#       mat.create_entry(virtual_dir, parent_dir, selection, fs)
+		for source in entry['selection']:
+			if not is_not_selection(source):
+				source_dir = os.path.join(base_path, source)
+				if not fs.isdir(source_dir):
+					raise ValueError(f"Lego entry {source_dir} is not a directory")
+
+def build_entries(virtual_dir, entries, fs):
+	for entry in entries:
+		parent_dir = entry['location']
+		base = entry.get('base', None)
+		operate_not = is_not_selection(entry['selection'][0])
+		if operate_not:
+			selection = entry['selection'][0]
+			mat.create_not_entries(virtual_dir, parent_dir, selection, fs)
+		else:
+			for s in entry['selection']:
+				selection = s if base == None else os.path.join(base, s)
+				mat.create_entry(virtual_dir, parent_dir, selection, fs)
 
 def process_structure(virtual_dir_path, structure, fs):
   entries = [format_entry(virtual_dir_path, e, fs) for e in structure]
