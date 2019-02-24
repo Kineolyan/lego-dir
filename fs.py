@@ -72,9 +72,12 @@ class TestApi:
     self.files.add(path)
 
   def mkdir(self, path):
-    self.created_dirs.append(path)
+    if not path in self.created_dirs:
+      self.created_dirs.append(path)
 
   def symlink(self, src, dst):
-    self.created_links.append((src, dst))
+    link = (src, dst)
+    if not link in self.created_links:
+      self.created_links.append(link)
 
 SYSTEM = SystemApi()
