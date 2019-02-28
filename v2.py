@@ -65,7 +65,10 @@ def check_entries(entries, fs):
 			raise ValueError(f"Selection must be either values or a list of not entries")
 
 		for source in entry['selection']:
-			if not is_not_selection(source):
+			if is_not_selection(source):
+				if os.sep in source:
+					raise ValueError(f"Lego negative entry {source} cannot be a path")
+			else:
 				source_dir = os.path.join(base_path, source)
 				if not fs.isdir(source_dir):
 					raise ValueError(f"Lego entry {source_dir} is not a directory")
@@ -77,7 +80,15 @@ def build_entries(virtual_dir, entries, fs):
 		operate_not = is_not_selection(entry['selection'][0])
 		if operate_not:
 			selection = entry['selection'][0]
-			mat.create_not_entries(virtual_dir, parent_dir, selection, fs)
+			if base == None:
+				mat.create_not_entries(virtual_dir, parent_dir, selection, fs)
+			else:
+				mat.create_not_entries_with_condition(
+					virtual_dir, 
+					parent_dir, 
+					base, 
+					lambda f: f != selection,
+					fs)
 		else:
 			for s in entry['selection']:
 				selection = s if base == None else os.path.join(base, s)

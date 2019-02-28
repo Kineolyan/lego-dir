@@ -145,8 +145,8 @@ class V1FormatEntryTest(unittest.TestCase):
 class V2CheckEntryTest(unittest.TestCase):
 
 	def setUp(self):
-	  home = '/home/user'
-	  self.fs = TestApi(home = home, cwd = home)
+		home = '/home/user'
+		self.fs = TestApi(home = home, cwd = home)
 
 	def test_simple_entry(self):
 		self.fs._set_dir('/path/to/a/dir')
@@ -270,30 +270,41 @@ class V2CheckEntryTest(unittest.TestCase):
 		with self.assertRaises(ValueError):
 			v2.check_entries(configs, self.fs)
 
+	def test_not_has_no_path(self):
+		self.fs._set_dir('/path/to/a/dir')
+		self.fs._set_dir('/path/to/a/dir/d1/d2')
+		config = {
+			'location': '/path/to/a/dir',
+			'base': 'd1/d2',
+			'selection': ['!f1/f2']
+		}
+		with self.assertRaises(ValueError):
+			v2.check_entries([config], self.fs)
+
 class V2BuildEntryTest(unittest.TestCase):
 
 	def setUp(self):
-	  home = '/home/user'
-	  self.fs = TestApi(home = home, cwd = home)
+		home = '/home/user'
+		self.fs = TestApi(home = home, cwd = home)
 
 	def test_for_simple_entry(self):
-	  structure = [simple_entry('/a/b/dir', 'f1')]
-	  v2.build_entries('path/to/vdir', structure, self.fs)
+		structure = [simple_entry('/a/b/dir', 'f1')]
+		v2.build_entries('path/to/vdir', structure, self.fs)
 
-	  self.assertEqual(
-	    set(self.fs.created_links),
-	    set([('/a/b/dir/f1', 'path/to/vdir/f1')]))
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([('/a/b/dir/f1', 'path/to/vdir/f1')]))
 
 	def test_for_simple_entries(self):
-	  config = {
+		config = {
 			'location': '/a/b/dir',
 			'selection': ['f1', 'f2']
 		}
-	  v2.build_entries('path/to/vdir', [config], self.fs)
+		v2.build_entries('path/to/vdir', [config], self.fs)
 
-	  self.assertEqual(
-	    set(self.fs.created_links),
-	    set([
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
 				('/a/b/dir/f1', 'path/to/vdir/f1'),
 				('/a/b/dir/f2', 'path/to/vdir/f2')
 			]))
@@ -320,46 +331,46 @@ class V2BuildEntryTest(unittest.TestCase):
 			]))
 
 	def test_for_not_entry(self):
-	  self.fs._set_entries('/path', ['a', 'b', 'not-this', 'c'])
-	  for e in ['a', 'b', 'c']:
-	    self.fs._set_dir(f"/path/{e}")
+		self.fs._set_entries('/path', ['a', 'b', 'not-this', 'c'])
+		for e in ['a', 'b', 'c']:
+			self.fs._set_dir(f"/path/{e}")
 
-	  structure = [simple_entry('/path', '!not-this')]
-	  v2.build_entries('to/vdir', structure, self.fs)
+		structure = [simple_entry('/path', '!not-this')]
+		v2.build_entries('to/vdir', structure, self.fs)
 
-	  self.assertEqual(
-	    set(self.fs.created_links),
-	    set([
-	      ('/path/a', 'to/vdir/a'),
-	      ('/path/b', 'to/vdir/b'),
-	      ('/path/c', 'to/vdir/c')
-	    ]))
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
+				('/path/a', 'to/vdir/a'),
+				('/path/b', 'to/vdir/b'),
+				('/path/c', 'to/vdir/c')
+			]))
 
 	def test_for_not_entry_with_base(self):
-	  self.fs._set_entries('/path', ['a', 'b', 'not-this', 'c'])
-	  for e in ['a', 'b', 'c']:
-	    self.fs._set_dir(f"/path/{e}")
+		self.fs._set_entries('/path/inside/dir', ['a', 'b', 'not-this', 'c'])
+		for e in ['a', 'b', 'c']:
+			self.fs._set_dir(f"/path/inside/dir/{e}")
 
-	  config = {
+		config = {
 			'location': '/path',
 			'base': 'inside/dir',
 			'selection': ['!not-this']
 		}
-	  v2.build_entries('to/vdir', [config], self.fs)
+		v2.build_entries('to/vdir', [config], self.fs)
 
-		# self.assertEqual(
-		# 	self.fs.created_dirs,
-		# 	[
-		# 	'path/to/vdir/long',
-		# 	'path/to/vdir/long/dir'
-		# 	])
-	  # self.assertEqual(
-	  #   set(self.fs.created_links),
-	  #   set([
-	  #     ('/path/inside/dir/a', 'to/vdir/inside/dir/a'),
-	  #     ('/path/inside/dir/b', 'to/vdir/inside/dir/b'),
-	  #     ('/path/inside/dir/c', 'to/vdir/inside/dir/c')
-	  #   ]))
+		self.assertEqual(
+			self.fs.created_dirs,
+			[
+				'to/vdir/inside',
+				'to/vdir/inside/dir'
+			])
+		self.assertEqual(
+		  set(self.fs.created_links),
+		  set([
+		    ('/path/inside/dir/a', 'to/vdir/inside/dir/a'),
+		    ('/path/inside/dir/b', 'to/vdir/inside/dir/b'),
+		    ('/path/inside/dir/c', 'to/vdir/inside/dir/c')
+		  ]))
 
 	# def test_for_many_entries(self):
 	#   self.fs._set_entries('/root', ['a', 'not-this', 'b'])

@@ -30,3 +30,15 @@ def create_not_entries(virtual_dir, parent_dir, folder, fs):
   for e in elements:
     if check(e):
       create_entry(virtual_dir, parent_dir, folder = e, fs = fs)
+
+def create_not_entries_with_condition(virtual_dir, parent_dir, folder, predicate, fs):
+  base_dir = os.path.join(parent_dir, folder)
+  elements = fs.listdir(base_dir)
+  check = lambda e: e[0] != '.' and fs.isdir(os.path.join(base_dir, e)) and predicate(e)
+  for e in elements:
+    if check(e):
+      create_entry(
+        virtual_dir, 
+        parent_dir, 
+        folder = os.path.join(folder, e), 
+        fs = fs)
