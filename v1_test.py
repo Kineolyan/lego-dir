@@ -48,8 +48,9 @@ class V1BuildEntryTest(unittest.TestCase):
       set([('/a/b/dir/f1', 'path/to/vdir/f1')]))
 
   def test_for_not_entry(self):
-    self.fs._set_entries('/path', ['a', 'b', 'not-this', 'c'])
-    for e in ['a', 'b', 'c']:
+    entries = ['a', 'b', 'not-this', 'c']
+    self.fs._set_entries('/path', entries)
+    for e in entries:
       self.fs._set_dir(f"/path/{e}")
 
     structure = [('/path', '!not-this')]
@@ -78,8 +79,9 @@ class V1BuildEntryTest(unittest.TestCase):
       [('/root/var/log/syslog', 'the/vdir/var/log/syslog')])
 
   def test_for_many_entries(self):
-    self.fs._set_entries('/root', ['a', 'not-this', 'b'])
-    for e in ['a', 'b', 'c']:
+    entries = ['a', 'not-this', 'b']
+    self.fs._set_entries('/root', entries)
+    for e in entries:
       self.fs._set_dir(f"/root/{e}")
 
     structure = [
@@ -110,8 +112,9 @@ class V1Test(unittest.TestCase):
 
   def test_integration(self):
     fs = TestApi(home = '/home/charlie', cwd = '/usr')
-    fs._set_entries('/root', ['a', 'b'])
-    for e in ['a', 'b']:
+    entries = ['a', 'b', 'not-this']
+    fs._set_entries('/root', entries)
+    for e in entries:
       fs._set_dir(f"/root/{e}")
     for e in ['/home/charlie/dir/f1', '/usr/other/f2', '/root/a', '/root/b']:
       fs._set_dir(os.path.dirname(e))

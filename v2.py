@@ -79,16 +79,13 @@ def build_entries(virtual_dir, entries, fs):
 		base = entry.get('base', None)
 		operate_not = is_not_selection(entry['selection'][0])
 		if operate_not:
-			selection = entry['selection'][0]
-			if base == None:
-				mat.create_not_entries(virtual_dir, parent_dir, selection, fs)
-			else:
-				mat.create_not_entries_with_condition(
-					virtual_dir, 
-					parent_dir, 
-					base, 
-					lambda f: f != selection,
-					fs)
+			selection = [s[1:] for s in entry['selection']]
+			mat.create_not_entries_with_condition(
+				virtual_dir,
+				parent_dir,
+				base,
+				lambda f: not f in selection,
+				fs)
 		else:
 			for s in entry['selection']:
 				selection = s if base == None else os.path.join(base, s)
@@ -98,7 +95,7 @@ def process_structure(virtual_dir_path, structure, fs):
   entries = [format_entry(virtual_dir_path, e, fs) for e in structure]
 
   check_entries(entries, fs)
-  # build_entries(virtual_dir_path, entries, fs)
+  build_entries(virtual_dir_path, entries, fs)
 
 def process(virtual_dir_path, config, fs):
 	while 'redirect' in config:
