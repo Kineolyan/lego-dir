@@ -331,8 +331,9 @@ class V2BuildEntryTest(unittest.TestCase):
 			]))
 
 	def test_for_not_entry(self):
-		self.fs._set_entries('/path', ['a', 'b', 'not-this', 'c'])
-		for e in ['a', 'b', 'c']:
+		entries = ['a', 'b', 'not-this', 'c']
+		self.fs._set_entries('/path', entries)
+		for e in entries:
 			self.fs._set_dir(f"/path/{e}")
 
 		structure = [simple_entry('/path', '!not-this')]
@@ -347,8 +348,9 @@ class V2BuildEntryTest(unittest.TestCase):
 			]))
 
 	def test_for_not_entry_with_base(self):
-		self.fs._set_entries('/path/inside/dir', ['a', 'b', 'not-this', 'c'])
-		for e in ['a', 'b', 'c']:
+		entries = ['a', 'b', 'not-this', 'c']
+		self.fs._set_entries('/path/inside/dir', entries)
+		for e in entries:
 			self.fs._set_dir(f"/path/inside/dir/{e}")
 
 		config = {
@@ -365,52 +367,136 @@ class V2BuildEntryTest(unittest.TestCase):
 				'to/vdir/inside/dir'
 			])
 		self.assertEqual(
-		  set(self.fs.created_links),
-		  set([
-		    ('/path/inside/dir/a', 'to/vdir/inside/dir/a'),
-		    ('/path/inside/dir/b', 'to/vdir/inside/dir/b'),
-		    ('/path/inside/dir/c', 'to/vdir/inside/dir/c')
-		  ]))
+			set(self.fs.created_links),
+			set([
+				('/path/inside/dir/a', 'to/vdir/inside/dir/a'),
+				('/path/inside/dir/b', 'to/vdir/inside/dir/b'),
+				('/path/inside/dir/c', 'to/vdir/inside/dir/c')
+			]))
 
-	# def test_for_many_entries(self):
-	#   self.fs._set_entries('/root', ['a', 'not-this', 'b'])
-	#   for e in ['a', 'b', 'c']:
-	#     self.fs._set_dir(f"/root/{e}")
+	def test_for_many_not_entries_with_base(self):
+		entries = ['a', 'ab', 'not-this', 'dc']
+		self.fs._set_entries('/path/inside/dir', entries)
+		for e in entries:
+			self.fs._set_dir(f"/path/inside/dir/{e}")
 
-	#   structure = [
-	#     ('/a/b/dir', 'f1'),
-	#     ('/my/home/has/dir', 'f2'),
-	#     ('/root', '!not-this')
-	#   ]
-	#   v1.build_entries('path/to/vdir', structure, self.fs)
+		config = {
+			'location': '/path',
+			'base': 'inside/dir',
+			'selection': [
+				'!not-this',
+				'!a',
+				'!c'
+			]
+		}
+		v2.build_entries('to/vdir', [config], self.fs)
 
-	#   self.assertEqual(
-	#     set(self.fs.created_links),
-	#     set([
-	#       ('/a/b/dir/f1', 'path/to/vdir/f1'),
-	#       ('/my/home/has/dir/f2', 'path/to/vdir/f2'),
-	#       ('/root/a', 'path/to/vdir/a'),
-	#       ('/root/b', 'path/to/vdir/b')
-	#     ]))
+		self.assertEqual(
+			self.fs.created_dirs,
+			[
+				'to/vdir/inside',
+				'to/vdir/inside/dir'
+			])
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
+				('/path/inside/dir/ab', 'to/vdir/inside/dir/ab'),
+				('/path/inside/dir/dc', 'to/vdir/inside/dir/dc')
+			]))
 
-	# def test_with_existing_entry(self):
-	#   self.fs._set_file('path/to/vdir/f1')
+	def test_for_many_not_entries_without_base(self):
+		entries = ['a', 'ab', 'not-this', 'dc']
+		self.fs._set_entries('/path', entries)
+		for e in entries:
+			self.fs._set_dir(f"/path/{e}")
 
-	#   structure = [('/a/b/dir', 'f1')]
-	#   v1.build_entries('path/to/vdir', structure, self.fs)
+		config = {
+			'location': '/path',
+			'selection': [
+				'!not-this',
+				'!a',
+				'!c'
+			]
+		}
+		v2.build_entries('to/vdir', [config], self.fs)
 
-	#   self.assertEqual(list(self.fs.created_links), [])
+		self.assertEqual(
+			self.fs.created_dirs,
+			[])
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
+				('/path/ab', 'to/vdir/ab'),
+				('/path/dc', 'to/vdir/dc')
+			]))
+
+	def test_not_entry_ignore_file(self):
+		dir_entries = ['a', 'not-this', 'b']
+		for e in dir_entries:
+			self.fs._set_dir(f"/path/{e}")
+		file_entries = ['c', 'd']
+		self.fs._set_entries('/path', dir_entries + file_entries)
+
+		config = simple_entry('/path', '!not-this')
+		v2.build_entries('to/vdir', [config], self.fs)
+
+		self.assertEqual(
+			self.fs.created_dirs,
+			[])
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
+				('/path/a', 'to/vdir/a'),
+				('/path/b', 'to/vdir/b')
+			]))
+
+	def test_for_many_entries(self):
+		entries = ['a', 'not-this', 'b']
+		self.fs._set_entries('/root', entries)
+		for e in entries:
+			self.fs._set_dir(f"/root/{e}")
+
+		structure = [
+			simple_entry('/a/b/dir', 'f1'),
+			simple_entry('/my/home/has/dir', 'f2'),
+			simple_entry('/root', '!not-this')
+		]
+		v2.build_entries('path/to/vdir', structure, self.fs)
+
+		self.assertEqual(
+			set(self.fs.created_links),
+			set([
+				('/a/b/dir/f1', 'path/to/vdir/f1'),
+				('/my/home/has/dir/f2', 'path/to/vdir/f2'),
+				('/root/a', 'path/to/vdir/a'),
+				('/root/b', 'path/to/vdir/b')
+			]))
+
+	def test_with_existing_entry(self):
+		self.fs._set_file('path/to/vdir/f1')
+
+		structure = [simple_entry('/a/b/dir', 'f1')]
+		v2.build_entries('path/to/vdir', structure, self.fs)
+
+		self.assertEqual(list(self.fs.created_links), [])
 
 class V2Test(unittest.TestCase):
 
 	def test_integration(self):
 		fs = TestApi(home = '/home/charlie', cwd = '/usr')
-		fs._set_entries('/root', ['a', 'b'])
-		for e in ['a', 'b']:
-			fs._set_dir(f"/root/{e}")
+		entries = ['a', 'not-this', 'b']
+		fs._set_entries('/root', entries)
 		for e in ['/home/charlie/dir/f1', '/usr/other/f2', '/root/a', '/root/b']:
 			fs._set_dir(os.path.dirname(e))
 			fs._set_dir(e)
+		fs._set_dir('/var')
+		fs._set_dir('/log')
+		log_entries = ['apache', 'nginx', 'tomcat', 'zgc']
+		fs._set_entries('/var/log', log_entries)
+		for e in log_entries: fs._set_dir(f"/var/log/{e}")
+		var_entries = ['log', 'db', 'games']
+		fs._set_entries('/var', var_entries)
+		for e in var_entries: fs._set_dir(f"/var/{e}")
 
 		structure = [
 			'~/dir:f1',
@@ -418,8 +504,7 @@ class V2Test(unittest.TestCase):
 			'/root:!not-this',
 			{
 				"location": '/var',
-				"base": 'log',
-				"selection": ['nginx', 'apache']
+				"selection": ['!cache', '!log']
 			},
 			{
 				"location": '/var',
@@ -427,16 +512,20 @@ class V2Test(unittest.TestCase):
 				"selection": ['nginx', 'apache']
 			}
 		]
-		# v2.process('vdir', {"structure": structure}, fs)
+		v2.process('vdir', {"structure": structure}, fs)
 
-		# self.assertEqual(
-		#   set(fs.created_links),
-		#   set([
-		#     ('/home/charlie/dir/f1', 'vdir/f1'),
-		#     ('/usr/other/f2', 'vdir/f2'),
-		#     ('/root/a', 'vdir/a'),
-		#     ('/root/b', 'vdir/b')
-		#   ]))
+		self.assertEqual(
+		  set(fs.created_links),
+		  set([
+		    ('/home/charlie/dir/f1', 'vdir/f1'),
+		    ('/usr/other/f2', 'vdir/f2'),
+		    ('/root/a', 'vdir/a'),
+		    ('/root/b', 'vdir/b'),
+				('/var/db', 'vdir/db'),
+				('/var/games', 'vdir/games'),
+				('/var/log/apache', 'vdir/log/apache'),
+				('/var/log/nginx', 'vdir/log/nginx')
+		  ]))
 
 if __name__ == '__main__':
 	unittest.main()
