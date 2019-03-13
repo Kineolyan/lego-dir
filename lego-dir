@@ -38,6 +38,5 @@ if version == 1:
   v1.process(virtual_dir_path, config, fs.SYSTEM)
 elif version == 2:
   v2.process(virtual_dir_path, config, fs.SYSTEM)
-  raise RuntimeError("Work in progress for this version")
 else:
   raise RuntimeError(f"Unsupported version {version}")
