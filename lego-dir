@@ -3,26 +3,55 @@
 import json
 import os
 import sys
-from config import read_default as read_config
+import config as cfg
 
 import v1
 import v2
 import fs
 
 def print_help():
-  first_arg = sys.argv[1]
-  if first_arg == '-h' or first_arg == '--help':
-    print("""
+  print("""
 Help: %s
 
 Arguments: <path/to/dir>
 
 Options:
+  -c, --config: Specify the configuration file to use
+                If specified, it will create a file .lego-spec in the directory refering to this one.
+                If not specified, it expects to find a file .lego-spec in the target directory    
   -h, --help: Prints this message
 """ % (os.path.basename(sys.argv[0])))
-    exit(0)
 
-print_help()
+def parse_args(args):
+  i = 0
+  options = {}
+  params = []
+  while i < len(args):
+    arg = args[i]
+    if arg == '--':
+      i += 1
+      break
+    if arg == '-h' or arg == '--help':
+      options['help'] = True
+    elif arg == '-c' or arg == '--config':
+      i += 1
+      options['config'] = args[i]
+    elif arg[0] == '-':
+      raise ValueError(f"Unrecognized option {arg}")
+    else:
+      params.append(arg)
+
+    i += 1
+  
+  params += args[i:]
+
+  return [params, options]
+
+[args, options] = parse_args(sys.argv)
+
+if 'help' in options:
+  print_help()
+  exit(0)
 
 def get_version(config):
   if 'version' in config:
@@ -30,8 +59,11 @@ def get_version(config):
   else:
     return 1
 
-virtual_dir_path = sys.argv[1]
-config = read_config(virtual_dir_path)
+virtual_dir_path = args[1]
+if 'config' in options:
+  v2.create_redirection(options['config'], virtual_dir_path, fs.SYSTEM)
+
+config = cfg.read_default(virtual_dir_path, fs.SYSTEM)
 
 version = get_version(config)
 if version == 1:

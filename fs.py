@@ -2,6 +2,9 @@ import os
 import sys
 
 class SystemApi:
+  def open(self, path, options = 'r'):
+    return open(path, options)
+
   def expanduser(self, path):
     return os.path.expanduser(path)
 
@@ -36,6 +39,12 @@ class TestApi:
     self.files = set()
     self.created_dirs = []
     self.created_links = []
+
+  def open(self, path, options = 'r'):
+    if options == 'r':
+      return open(path)
+    else:
+      raise RuntimeError("Not implemented")
 
   def expanduser(self, path):
     if path.startswith('~'):
