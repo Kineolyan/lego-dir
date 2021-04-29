@@ -99,6 +99,28 @@ def process_structure(virtual_dir_path, structure, fs):
 
 def process(virtual_dir_path, config, fs):
 	while 'redirect' in config:
-		config = read_config(config['redirect'])
+		config = read_config(config['redirect'], fs)
 
 	process_structure(virtual_dir_path, config['structure'], fs)
+
+def create_redirection(config_file, virtual_dir_path, fs):
+	if not fs.exists(virtual_dir_path):
+		fs.mkdir(virtual_dir_path)
+
+	dir_path = fs.expanduser(virtual_dir_path)
+	if not os.path.isabs(dir_path):
+		dir_path = os.path.normpath(os.path.join(fs.getcwd(), dir_path))
+
+	spec_path = os.path.join(dir_path, '.lego-spec')
+	with fs.open(spec_path, 'w') as file:
+		target_config = fs.expanduser(config_file)
+		if not os.path.isabs(target_config):
+			target_config = os.path.normpath(os.path.join(fs.getcwd(), target_config))
+			
+		file.write(f"""
+{{
+  "version": 2,
+  "redirect": "{target_config}"
+}}
+""")
+
